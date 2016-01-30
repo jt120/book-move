@@ -4,7 +4,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;
+import org.apache.lucene.analysis.da.DanishAnalyzer;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +27,9 @@ import java.util.regex.Pattern;
 public class BookMove {
 
     private static String keywordsFile = "keys.txt";
-    private static String sourceBookPath = "d:/books";
-    private static String destBookPath = "d:/text/books/";
-    private static String[] ext = {"epub", "mobi", "pdf", "pptx", "ppt", "azw3", "zip", "rar"};
+    private static String sourceBookPath = "D:\\text\\books";
+    private static String destBookPath = "d:/test/books/";
+    private static String[] ext = {"epub", "mobi", "pdf", "pptx", "ppt", "azw3", "zip", "rar","doc","chm"};
     public static Pattern compile = Pattern.compile("[\\.\\s\\(\\)\\[\\]%\\-_\\+《》]");
     public static Splitter splitter = Splitter.on(compile).omitEmptyStrings().trimResults();
 
@@ -37,10 +39,13 @@ public class BookMove {
         convertMap.put("algorithms", "algorithm");
         convertMap.put("databases", "database");
         convertMap.put("patterns", "pattern");
+        convertMap.put("systems", "system");
+        convertMap.put("designing", "design");
+
     }
 
     public static List<String> readKeywords() throws Exception {
-        URL resource = BookMove.class.getClassLoader().getResource(keywordsFile);
+        URL resource = Resources.getResource(keywordsFile);
         List<String> keywords = FileUtils.readLines(new File(resource.toURI()));
         Set<String> tmp = Sets.newHashSet(keywords.iterator());//去重
         List<String> result = Lists.newArrayList();
@@ -58,32 +63,49 @@ public class BookMove {
         files.forEach((f) -> {
             System.out.println("process file " + f.getAbsolutePath());
             Iterable<String> iter = splitter.split(f.getName());
+            boolean moved = false;
             for (String str : iter) {
-                String houxuan = convert(str);
-                if (keywords.contains(houxuan)) {
+                String subject = convert(str);
+                if (keywords.contains(subject)) {
                     System.out.println("match file " + str);
                     try {
-                        String pathname = destBookPath + houxuan;
-                        FileUtils.moveFileToDirectory(f, new File(pathname), true);
-                        System.out.println("copy file to " + pathname);
+                        String pathname = destBookPath + subject;
+                        if (moveFile(f, pathname)) break;
                     } catch (IOException e) {
                         System.out.println("error" + e);
                     }
+                    moved = true;
                     break;
+                }
+            }
+            if (!moved) {
+                try {
+                    moveFile(f, destBookPath+"other");
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
 
         });
     }
 
+    private static boolean moveFile(File f, String pathname) throws IOException {
+        File destDir = new File(pathname);
+        File targetFile = new File(destDir, f.getName());
+        if (targetFile.exists()) {
+            return true;
+        }
+        FileUtils.moveFileToDirectory(f, destDir, true);
+        System.out.println("move file to " + pathname);
+        return false;
+    }
+
 
     public static String convert(String orgName) {
-        orgName = orgName.trim().toLowerCase();
-        orgName = orgName.replace("5b", "");
+        orgName = orgName.trim().toLowerCase().replace("5b", "");
         if (convertMap.containsKey(orgName)) {
             return convertMap.get(orgName);
         }
-
         return orgName;
     }
 
