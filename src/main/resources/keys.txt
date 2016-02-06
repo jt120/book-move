@@ -23,7 +23,7 @@ oozie
 social
 javascript
 code
-Computer
+network
 database
 pattern
 dubbo
@@ -36,8 +36,7 @@ algorithm
 android
 api
 awk
-big
-action
+data
 freemarker
 github
 TypeScript
@@ -116,6 +115,13 @@ mybatis
 mysql
 neo4j
 netty
+ant
+aspectj
+camel
+bdd
+cors
+osgi
+struts
 network
 nginx
 nodejs

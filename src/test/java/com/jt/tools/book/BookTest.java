@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -102,6 +103,18 @@ public class BookTest {
                 " - Second Edition.pdf";
         List<Term> parse = ToAnalysis.parse(s);
         System.out.println(parse);
+    }
+
+    @Test
+    public void test05() throws Exception {
+        System.out.println(parse("%5B"));
+        System.out.println(parse("%28"));
+        System.out.println(parse("%29"));
+        System.out.println(parse("%5D"));
+    }
+
+    private String parse(String s) throws Exception {
+        return URLDecoder.decode(s, "utf-8");
     }
 
     @Test
