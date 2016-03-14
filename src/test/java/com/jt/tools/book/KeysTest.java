@@ -7,13 +7,26 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.jt.tools.BookMove;
+import edu.stanford.nlp.dcoref.Document;
+import edu.stanford.nlp.simple.Sentence;
+import org.ansj.domain.Term;
+import org.ansj.splitWord.analysis.ToAnalysis;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.util.Version;
 import org.junit.Test;
+import org.nlpcn.commons.lang.standardization.Element;
+import org.nlpcn.commons.lang.standardization.WordUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Arrays;
@@ -36,19 +49,7 @@ public class KeysTest {
         String[] split = new String[]{".", " ", "(", ")", "[", "]", "%5B", "%5D", "%29", "%28"};
 
 
-    /**
-     * 生成关键字文件
-     * @throws Exception
-     */
-    @Test
-    public void test01() throws Exception {
-        String file = "%5BZooKeeper%282013.11%29%5D.Flavio.Junqueira.文字版.pdf";
-        List<String> strings = BookMove.splitter.splitToList(file);
-        System.out.println(strings);
-        for (String s : strings) {
-            System.out.println(BookMove.convert(s));
-        }
-    }
+
 
 
 
@@ -84,6 +85,31 @@ public class KeysTest {
     public void testa01() throws Exception {
         System.out.println(FileUtils.getUserDirectoryPath());
         System.out.println(userDir);
+    }
+
+    @Test
+    public void test04() throws Exception {
+        Sentence sentence = new Sentence("hello java");
+        System.out.println(sentence);
+    }
+
+    String s = "[Lucene.in.Action(2nd,2010.7)].Michael.McCandless.文字版.pdf";
+    @Test
+    public void test05() throws Exception {
+        StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
+        TokenStream data = analyzer.tokenStream("data", new StringReader("[Lucene.in.Action(2nd,2010.7)].Michael.McCandless.文字版.pdf"));
+        CharTermAttribute charTermAttribute = data.addAttribute(CharTermAttribute.class);
+
+        while (data.incrementToken()) {
+            System.out.println(new String(charTermAttribute.buffer()));
+        }
+    }
+
+    @Test
+    public void test06() throws Exception {
+        List<Term> parse = ToAnalysis.parse(s);
+        parse.forEach(s-> System.out.println(s.getName()));
+
     }
 
 }
