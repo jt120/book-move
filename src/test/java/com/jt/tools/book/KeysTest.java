@@ -2,39 +2,19 @@ package com.jt.tools.book;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.io.Files;
-import com.jt.tools.BookMove;
-import edu.stanford.nlp.dcoref.Document;
-import edu.stanford.nlp.simple.Sentence;
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.util.Version;
 import org.junit.Test;
-import org.nlpcn.commons.lang.standardization.Element;
-import org.nlpcn.commons.lang.standardization.WordUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.StringReader;
-import java.net.URL;
 import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * since 2016/1/14.
@@ -42,15 +22,11 @@ import java.util.regex.Pattern;
 public class KeysTest {
 
     ObjectMapper objectMapper = new ObjectMapper();
-        String userDir = System.getProperty("user.dir");
-        String convertName = "convert.txt";
-        String dest = "d:/test/books/";
+    String userDir = System.getProperty("user.dir");
+    String convertName = "convert.txt";
+    String dest = "d:/test/books/";
     String source = "d:/books";
-        String[] split = new String[]{".", " ", "(", ")", "[", "]", "%5B", "%5D", "%29", "%28"};
-
-
-
-
+    String[] split = new String[]{".", " ", "(", ")", "[", "]", "%5B", "%5D", "%29", "%28"};
 
 
     @Test
@@ -64,7 +40,6 @@ public class KeysTest {
 
     /**
      * 根据关键字文件, 生成目录
-     * @throws Exception
      */
     @Test
     public void test02() throws Exception {
@@ -87,17 +62,14 @@ public class KeysTest {
         System.out.println(userDir);
     }
 
-    @Test
-    public void test04() throws Exception {
-        Sentence sentence = new Sentence("hello java");
-        System.out.println(sentence);
-    }
 
     String s = "[Lucene.in.Action(2nd,2010.7)].Michael.McCandless.文字版.pdf";
+
     @Test
     public void test05() throws Exception {
         StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
-        TokenStream data = analyzer.tokenStream("data", new StringReader("[Lucene.in.Action(2nd,2010.7)].Michael.McCandless.文字版.pdf"));
+        TokenStream data = analyzer.tokenStream("data", new StringReader("[Lucene.in.Action(2nd," +
+                "2010.7)].Michael.McCandless.文字版.pdf"));
         CharTermAttribute charTermAttribute = data.addAttribute(CharTermAttribute.class);
 
         while (data.incrementToken()) {
@@ -108,7 +80,7 @@ public class KeysTest {
     @Test
     public void test06() throws Exception {
         List<Term> parse = ToAnalysis.parse(s);
-        parse.forEach(s-> System.out.println(s.getName()));
+        parse.forEach(s -> System.out.println(s.getName()));
 
     }
 

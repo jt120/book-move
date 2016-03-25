@@ -1,12 +1,19 @@
 package com.jt.tools;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.LineProcessor;
 import com.google.common.io.Resources;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -34,5 +41,19 @@ public class Keywords {
             e.printStackTrace();
         }
         return set;
+    }
+
+    public static void main(String[] args) throws Exception {
+        Set<String> load = load();
+        ArrayList<String> list = Lists.newArrayList(load);
+        Collections.sort(list);
+        Joiner joiner = Joiner.on("\r\n");
+        String join = joiner.join(list);
+        String property = System.getProperty("user.dir")+ "/src/main/resources";
+        String normalize = FilenameUtils.normalize(property);
+
+        File file = new File(normalize, "keys.txt");
+        FileUtils.write(file, join, Charsets.UTF_8, false);
+
     }
 }
