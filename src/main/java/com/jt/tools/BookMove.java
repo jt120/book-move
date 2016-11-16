@@ -1,14 +1,17 @@
 package com.jt.tools;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Collection;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,36 +44,46 @@ public class BookMove {
 
     }
 
-    public static void moveBook(String source, String dest, String[] exts, Set<String> keywords) throws Exception {
-        Collection<File> files = FileUtils.listFiles(new File(source), exts, true);
-        System.out.println("keywords " + keywords);
-        final String destPath = buildPath(dest);
-        files.forEach((f) -> {
-            System.out.println("process file " + f.getAbsolutePath());
-            Book book = new Book(f);
-            moveDest(keywords, book, destPath);
-        });
+    public static void moveBook(String source, String dest, Set<String> exts, Set<String> keywords) throws Exception {
+        Files.walk(Paths.get(source)).filter(p -> exts.contains(com.google.common.io.Files.getFileExtension(p
+                .getFileName().toString())))
+                .forEach(f -> {
+                    log.info("process file {}", f);
+                    moveDest(keywords, f, dest);
+                });
     }
 
-    private static String buildPath(String dest) {
-        if (!(dest.endsWith("/") || dest.endsWith("\\"))) {
-            dest = dest + "/";
-        }
-        return dest;
+    private static String buildTargetPath(String root, String subject, String fileName) {
+        return root + File.separator + subject + File.separator + fileName;
     }
 
-    private static void moveDest(Set<String> keywords, Book book, String dest) {
-        List<Term> parse = ToAnalysis.parse(book.getFile().getName());
-
-        parse.forEach(s -> {
-            String subject = convert(s.getName());
-            //String subject = s.getName();
-            if (keywords.contains(subject)) {
-                book.addKeyword(subject);
-
+    private static void moveDest(Set<String> keywords, Path sourceFile, String dest) {
+        List<Term> parse = ToAnalysis.parse(com.google.common.io.Files.getNameWithoutExtension(sourceFile.getFileName()
+                .toString()));
+        boolean notRemove = true;
+        for (Term term : parse) {
+            final String convert = convert(term.getName());
+            if (keywords.contains(convert)) {
+                moveFile(sourceFile, buildTargetPath(dest, convert, sourceFile.getFileName().toString()));
+                notRemove = false;
+                break;
             }
-        });
-        book.move(dest + book.getFirstKeyword());
+        }
+
+        if (notRemove) {
+            moveFile(sourceFile, buildTargetPath(dest, "other", sourceFile.getFileName().toString()));
+        }
+    }
+
+    private static void moveFile(Path sourceFile, String targetFile) {
+        try {
+            log.info("move file {} {}", sourceFile, targetFile);
+            final Path target = Paths.get(targetFile);
+            Files.createDirectories(target.getParent());
+            Files.move(sourceFile, target);
+        } catch (IOException e) {
+            log.warn("move file fail", e);
+        }
     }
 
 
@@ -83,17 +96,17 @@ public class BookMove {
     }
 
     public static void removeEmptyDir(String source) {
-        File file = new File(source);
-        File[] files = file.listFiles();
-        for (File f : files) {
-            if (f.isDirectory()) {
-                String[] list = f.list();
-                if (list.length == 0) {
-                    System.out.println(f.getAbsolutePath() + " is kong");
-                    f.delete();
+        final Path path = Paths.get(source);
+        try {
+            Files.walk(path).forEach(p -> {
+                final File file = p.toFile();
+                if (file.isDirectory() && file.list().length == 0) {
+                    log.info("removeEmptyDir {}", file);
+                    file.delete();
                 }
-
-            }
+            });
+        } catch (IOException e) {
+            log.warn("removeEmptyDir fail", e);
         }
     }
 
@@ -102,11 +115,11 @@ public class BookMove {
         //加载关键字
         Set<String> load = Keywords.load();
         //遍历文件, 针对匹配额关键字, 移动
-        String sourceBookPath = "D:\\test\\book\\";
-        String destBookPath = "D:\\test\\book2\\";
-        String[] ext = {"epub", "mobi", "pdf", "pptx", "ppt", "azw3", "zip", "rar", "doc", "chm"};
+        String sourceBookPath = "D:\\test";
+        String destBookPath = "D:\\a\\2";
+        Set<String> exts = Sets.newHashSet("epub", "mobi", "pdf", "pptx", "ppt", "azw3", "zip", "rar", "doc", "chm");
         //清楚空文件夹
-        moveBook(sourceBookPath, destBookPath, ext, load);
+        moveBook(sourceBookPath, destBookPath, exts, load);
         removeEmptyDir(sourceBookPath);
     }
 }
