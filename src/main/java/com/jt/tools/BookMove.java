@@ -1,6 +1,8 @@
 package com.jt.tools;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import org.ansj.domain.Term;
 import org.ansj.splitWord.analysis.ToAnalysis;
@@ -27,6 +29,9 @@ public class BookMove {
     private static final Logger log = LoggerFactory.getLogger(BookMove.class);
 
     public static Map<String, String> convertMap = Maps.newHashMap();
+
+    public static Set<String> exts = Sets.newHashSet("epub", "mobi", "pdf", "pptx", "ppt", "azw3", "zip", "rar",
+            "doc", "chm");
 
     static {
         convertMap.put("algorithms", "algorithm");
@@ -110,10 +115,33 @@ public class BookMove {
         }
     }
 
+    public static Multiset<String> createKeywords(String rootPath, Set<String> exts) {
+        Multiset<String> set = HashMultiset.create();
+        try {
+            Files.walk(Paths.get(rootPath)).filter(p -> exts.contains(com.google.common.io.Files.getFileExtension(p
+                    .getFileName().toString())))
+                    .forEach(f -> {
+                        String fileName = com.google.common.io.Files.getNameWithoutExtension(f.getFileName().toString
+                                ());
+                        final String[] split = fileName.split("\\W+");
+                        for (String s : split) {
+                            if (s.matches("[a-zA-Z]{2,}")) {
+                                set.add(s.toLowerCase());
+                            }
+                        }
+
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return set;
+    }
+
     public static void main(String[] args) throws Exception {
 
         //加载关键字
-        Set<String> load = Keywords.load();
+        Set<String> load = Keywords.load("keys.txt");
         //遍历文件, 针对匹配额关键字, 移动
         String sourceBookPath = "D:\\test";
         String destBookPath = "D:\\a\\2";
